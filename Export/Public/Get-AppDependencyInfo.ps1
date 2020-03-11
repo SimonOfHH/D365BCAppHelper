@@ -21,7 +21,10 @@ function Get-AppDependencyInfo {
         $AppName,
         [parameter(Mandatory = $false)]
         [switch]
-        $IncludeUninstalled = $false
+        $IncludeUninstalled = $false,
+        [parameter(Mandatory = $false)]
+        [switch]
+        $ReverseLookup = $false
     )    
     begin {
         if (-not($ServerInstance)) {
@@ -167,12 +170,113 @@ function Get-AppDependencyInfo {
             $appsPopulated = $appsPopulated | Sort-Object -Property NoOfDependencies -Descending    
             Expand-DependentApps -Apps $appsPopulated
         }
-        $AppInfo = Get-AppsWithDependencies -ServerInstance $ServerInstance -Tenant $Tenant -IncludeUninstalled:$IncludeUninstalled
-        if ($AppPublisher) {
-            $AppInfo | Where-Object { ($_.Publisher -eq $AppPublisher) -and ($_.Name -eq $AppName) }    
+        function Get-ReversedLookupOrder {
+            [CmdletBinding()]
+            param(
+                [parameter(Mandatory = $true)]
+                [PSObject]
+                $Apps,
+                [parameter(Mandatory = $true)]
+                [string]
+                $AppName,
+                [parameter(Mandatory = $false)]
+                [string]
+                $AppPublisher
+            )
+            # Check recursively if the provided object has the given AppName as a dependent app
+            function Test-DependentAppsContainApp {
+                param(
+                    [parameter(Mandatory = $true)]
+                    [PSObject]
+                    $App,
+                    [parameter(Mandatory = $true)]
+                    [string]
+                    $AppName,
+                    [parameter(Mandatory = $false)]
+                    [string]
+                    $AppPublisher
+                )
+                process {
+                    $containsDependency = $false
+                    
+                    if ($AppPublisher) {
+                        $containsDependency = $null -ne ($App.DependentApps | Where-Object { ($_.Publisher -eq $AppPublisher) -and ($_.Name -eq $AppName) })
+                    }
+                    else {
+                        $containsDependency = $null -ne ($App.DependentApps | Where-Object { $_.Name -eq $AppName })
+                    }
+                    foreach ($dependency in $App.DependentApps) {
+                        $containsDependency = $containsDependency -or (Test-DependentAppsContainApp -App $dependency -AppName $AppName -AppPublisher $AppPublisher)
+                    }
+                    $containsDependency
+                }
+            }
+            # Removes all app-references from the (initially) complete object with all app references, to only provide the references to the desired AppName
+            function Clear-AppObject {
+                param(
+                    [parameter(Mandatory = $true)]
+                    $Apps,
+                    [parameter(Mandatory = $true)]
+                    [string]
+                    $AppName,
+                    [parameter(Mandatory = $false)]
+                    [string]
+                    $AppPublisher
+                )
+                process {
+                    $elements = @()
+                    foreach ($app in $Apps) {
+                        if (Test-DependentAppsContainApp -App $app -AppName $AppName -AppPublisher $AppPublisher) {
+                            $cleanedDependentApps = @()
+                            foreach ($dependentApp in $app.DependentApps) {
+                                if ($AppPublisher) {
+                                    if (($dependentApp.Name -eq $AppName) -and ($dependentApp.Publisher -eq $AppPublisher)) {
+                                        $dependentApp.DependentApps = $null
+                                        $cleanedDependentApps += $dependentApp
+                                    }
+                                }
+                                else {
+                                    if ($dependentApp.Name -eq $AppName) {
+                                        $dependentApp.DependentApps = $null
+                                        $cleanedDependentApps += $dependentApp
+                                    }
+                                }
+                                if (Test-DependentAppsContainApp -App $dependentApp -AppName $AppName -AppPublisher $AppPublisher) {
+                                    $dependentApp = Clear-AppObject -Apps $dependentApp -AppName $AppName -AppPublisher $AppPublisher
+                                    $cleanedDependentApps += $dependentApp
+                                }
+                            }
+                            $app.DependentApps = $cleanedDependentApps
+                            $elements += $app
+                        }
+                    }
+                    $elements
+                }
+            }
+            $Apps = Clear-AppObject -Apps $Apps -AppName $AppName -AppPublisher $AppPublisher
+            $Apps
         }
+        if (($AppName -eq "*") -and ($ReverseLookup)) {
+            throw "You can not use Wildcard-search combined with 'ReverseLookup'"
+            return
+        }
+        $AppInfo = Get-AppsWithDependencies -ServerInstance $ServerInstance -Tenant $Tenant -IncludeUninstalled:$IncludeUninstalled
+        if ($ReverseLookup) {
+            $AppInfo = Get-ReversedLookupOrder -Apps $AppInfo -AppName $AppName -AppPublisher $AppPublisher
+            $AppInfo
+        } 
         else {
-            $AppInfo | Where-Object { $_.Name -eq $AppName }
+            if ($AppName -eq "*") {
+                $AppInfo
+            }
+            else {
+                if ($AppPublisher) {
+                    $AppInfo | Where-Object { ($_.Publisher -eq $AppPublisher) -and ($_.Name -eq $AppName) }    
+                }
+                else {
+                    $AppInfo | Where-Object { $_.Name -eq $AppName }
+                }
+            }
         }
     }
 }
