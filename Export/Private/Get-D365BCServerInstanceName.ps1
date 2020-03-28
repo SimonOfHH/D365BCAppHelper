@@ -33,10 +33,10 @@ function Get-D365BCServerInstanceName {
             $ReadHost = Read-Host "Enter ID: "
             [int]$instanceId = $ReadHost - 1
             $instance = $instances | Select-Object -Skip $instanceId -First 1 | Select-Object -Property ServerInstance -ExpandProperty ServerInstance
+            Write-Host "Selected Instance: $($instance.Substring($instance.LastIndexOf("$") + 1))"
+            Write-Host "------------------------------------------"
         }
-        $selectedInstance = $instance.Substring($instance.LastIndexOf("$") + 1)
-        Write-Host "Selected Instance: $selectedInstance"
-        Write-Host "------------------------------------------"
+        $selectedInstance = $instance.Substring($instance.LastIndexOf("$") + 1)        
         $selectedInstance
     }
 }
