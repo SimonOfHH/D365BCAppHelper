@@ -1,4 +1,4 @@
-function Get-D365BCLatestVersionFromFolder {
+function Global:Get-D365BCLatestVersionFromFolder {
     [CmdletBinding()]
     <#
     .SYNOPSIS

@@ -1,4 +1,4 @@
-function Install-D365BCDependentApps {
+function Global:Install-D365BCDependentApps {
     [CmdletBinding()]
     <#
     .SYNOPSIS

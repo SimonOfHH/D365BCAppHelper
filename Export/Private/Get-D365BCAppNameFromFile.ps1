@@ -1,4 +1,4 @@
-function Get-D365BCAppNameFromFile {
+function Global:Get-D365BCAppNameFromFile {
     [CmdletBinding()]
     <#
     .SYNOPSIS

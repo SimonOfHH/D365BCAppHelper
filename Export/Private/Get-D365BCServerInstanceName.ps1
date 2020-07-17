@@ -1,4 +1,4 @@
-function Get-D365BCServerInstanceName {
+function Global:Get-D365BCServerInstanceName {
     [CmdletBinding()]
     <#
     .SYNOPSIS
