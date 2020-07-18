@@ -8,6 +8,11 @@ Current list of commands:
 - [Install-D365BCApp](#install-d365BCApp)
 - [Uninstall-D365BCApp](#uninstall-d365BCApp)
 
+Additionally there are a couple of helper CmdLets. The important ones are described here:
+- [Get-D365BCAppNameFromFile](#get-d365BCAppNameFromFile)
+- [Get-D365BCVersionFromFile](#get-d365BCVersionFromFile)
+- [Get-D365BCPublisherFromFile](#get-d365BCPublisherFromFile)
+
 ## Get-AppDependencyInfo
 ### Description
 Used by `Write-DependencyTree` to resolve dependencies
@@ -229,3 +234,42 @@ Uninstalls an D365BC App
 **InstalledVersion**: Used when called from *Update-D365BCApp*
 
 **Force**: Uses *Force* on all used CmdLets
+
+## Get-D365BCAppNameFromFile
+### Short Description
+Reads the "Name"-property from an .app-File (works with or without standard Business Central CmdLets available)
+
+### Parameters
+```
+-Filename
+[-FromManifest]
+```
+**Filename**: (string) The full path to the File (.app) that the information should be read from
+
+**FromManifest**: (switch) Set, if you don't want to use the standard CmdLet (`Get-NavAppInfo`)
+
+## Get-D365BCVersionFromFile
+### Short Description
+Reads the "Version"-property from an .app-File (works with or without standard Business Central CmdLets available)
+
+### Parameters
+```
+-Filename
+[-FromManifest]
+```
+**Filename**: (string) The full path to the File (.app) that the information should be read from
+
+**FromManifest**: (switch) Set, if you don't want to use the standard CmdLet (`Get-NavAppInfo`)
+
+## Get-D365BCPublisherFromFile
+### Short Description
+Reads the "Publisher"-property from an .app-File (works with or without standard Business Central CmdLets available)
+
+### Parameters
+```
+-Filename
+[-FromManifest]
+```
+**Filename**: (string) The full path to the File (.app) that the information should be read from
+
+**FromManifest**: (switch) Set, if you don't want to use the standard CmdLet (`Get-NavAppInfo`)
