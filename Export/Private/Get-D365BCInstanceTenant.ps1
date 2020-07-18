@@ -1,4 +1,4 @@
-function Get-D365BCInstanceTenant {
+function Global:Get-D365BCInstanceTenant {
     [CmdletBinding()]
     <#
     .SYNOPSIS

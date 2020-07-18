@@ -158,14 +158,35 @@ function Get-AppDependencyInfo {
             else {
                 $allApps = Get-NavAppinfo -ServerInstance $ServerInstance -Tenant $Tenant -TenantSpecificProperties -Verbose:$false | Where-Object { $_.IsInstalled -eq $true }
             }
+            $allApps = Get-NavAppinfo -ServerInstance $ServerInstance -Tenant $Tenant -TenantSpecificProperties -Verbose:$false
+            # There might be different versions of some apps (where the previous versions are uninstalled), remove these duplicates from the array
+            $allAppsOnce = @()
+            foreach ($app in $allApps) {
+                $noOfInstances = ($allApps | Where-Object { $_.Name -eq $app.Name }).Count
+                if ($noOfInstances -eq 1) {
+                    $allAppsOnce += $app
+                }
+                else {
+                    $isLatestVersion = $true
+                    foreach ($specificApp in $allApps | Where-Object { $_.Name -eq $app.Name }) {
+                        if (($specificApp -ne $app) -and ($app.Version -lt $specificApp.Version)) {
+                            $isLatestVersion = $false
+                        }
+                    }
+                    if ($isLatestVersion) {
+                        $allAppsOnce += $app
+                    }
+                }	
+            }
+            $allApps = $allAppsOnce
             Write-Verbose "Found $($allApps.Count) apps"
             Write-Verbose "Populating dependencies for $($allApps.Count) apps"
             $appsPopulated = @()
             foreach ($app in $allApps) {
                 $appInfo = Get-NavAppinfo -ServerInstance $ServerInstance -Id $app.AppId -Version $app.Version -Verbose:$false
-                if ($app.IsInstalled -eq $true) {
-                    $appsPopulated += Get-AppWithPopulatedDependencies -ServerInstance $ServerInstance -App $appInfo
-                }
+                #if ($app.IsInstalled -eq $true) {
+                $appsPopulated += Get-AppWithPopulatedDependencies -ServerInstance $ServerInstance -App $appInfo
+                #}
             }
             $appsPopulated = $appsPopulated | Sort-Object -Property NoOfDependencies -Descending    
             Expand-DependentApps -Apps $appsPopulated

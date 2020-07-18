@@ -1,4 +1,4 @@
-function Get-D365BCPublisherFromFile {
+function Global:Get-D365BCPublisherFromFile {
     [CmdletBinding()]
     <#
     .SYNOPSIS

@@ -1,4 +1,4 @@
-function Get-D365BCVersionFromFile {
+function Global:Get-D365BCVersionFromFile {
     [CmdletBinding()]
     <#
     .SYNOPSIS
@@ -20,7 +20,7 @@ function Get-D365BCVersionFromFile {
         }
         Write-Verbose "Getting information from $Filename"
         $info = Get-NAVAppInfo -Path $Filename
-        $info.Version.ToString()
+        $info.Version
     }
 }
 Export-ModuleMember Get-D365BCVersionFromFile

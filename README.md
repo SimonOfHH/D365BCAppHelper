@@ -4,6 +4,9 @@ This module is used as a helper module for **Dynamics 365 Business Central** App
 Current list of commands:
 - [Get-AppDependencyInfo](#get-appDependencyInfo)
 - [Write-DependencyTree](#write-dependencyTree)
+- [Update-D365BCApp](#update-d365BCApp)
+- [Install-D365BCApp](#install-d365BCApp)
+- [Uninstall-D365BCApp](#uninstall-d365BCApp)
 
 ## Get-AppDependencyInfo
 ### Description
@@ -145,3 +148,84 @@ With the Parameter `ReverseLookup` you can output Dependencies in a reversed way
 | [1] --> [Intelligent Cloud Base]
 | [2] ----> [Business Central Intelligent Cloud]
 ```
+
+## Update-D365BCApp
+### Short Description
+Updates an already installed App
+### Parameters
+```
+[-ServerInstance]
+[-AppPublisher]
+-AppName
+[-AppVersion]
+[-Tenant]
+[-Scope]
+[-SyncMode]
+-AppFilename
+[-Force]
+[-ForceSubsequent]
+```
+**Scope**: *Tenant*, *Global*; default: *Tenant*
+
+**SyncMode**: *Add*, *Clean*, *Development*, *ForceSync*; default: *Add*
+
+**Force**: Skips Confirmation and also uses *Force* on all subsequent CmdLets
+
+**ForceSubsequent**: Uses *Force* on all subsequent CmdLets (not necessary when using *Force*)
+
+### Output
+*none*
+
+### Description
+Uninstalls the existing App-Version and Installs the new Version (from *AppFilename*) with `Install-D365BCApp` (includes *Publish-NAVApp*, *Sync-NAVApp*, *Start-NAVAppDataUpgrade*, *Install-NAVApp* and *Install-D365BCDependentApps*)
+
+## Install-D365BCApp
+### Short Description
+Installs an D365BC App
+### Parameters
+```
+-ServerInstance
+[-AppPublisher]
+-AppName
+-AppVersion
+[-Tenant]
+[-Scope]
+[-SyncMode]
+-AppFilename
+[-UpgradeApp]
+[-InstalledVersion]
+[-Force]
+```
+**Scope**: *Tenant*, *Global*; default: *Tenant*
+
+**SyncMode**: *Add*, *Clean*, *Development*, *ForceSync*; default: *Add*
+
+**InstalledVersion**: Used when called from *Update-D365BCApp*
+
+**Force**: Uses *Force* on all used CmdLets
+
+### Description
+This CmdLet is a combination of *Publish-NAVApp*, *Sync-NAVApp*, *Start-NAVAppDataUpgrade* (when parameter *UpgradeApp* is used), *Install-NAVApp* and *Install-D365BCDependentApps*)
+
+## Uninstall-D365BCApp
+### Short Description
+Uninstalls an D365BC App
+### Parameters
+```
+-ServerInstance
+[-AppPublisher]
+-AppName
+-AppVersion
+[-Tenant]
+[-Scope]
+[-SameVersionInstall]
+[-InstalledVersion]
+[-Force]
+```
+**Scope**: *Tenant*, *Global*; default: *Tenant*
+
+**SameVersionInstall**: Used when called from *Update-D365BCApp*, necessary if Version wasn't incremented in app-file (Used when called from *Update-D365BCApp*)
+
+**InstalledVersion**: Used when called from *Update-D365BCApp*
+
+**Force**: Uses *Force* on all used CmdLets

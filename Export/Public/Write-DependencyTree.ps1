@@ -68,7 +68,9 @@ function Write-DependencyTree {
     }
     Write-Host "> " -NoNewline
     Write-Host "[$($App.Name)]"
-
+    if (-not($App.DependentApps)){
+        return
+    }
     $App.DependentApps = $App.DependentApps | Sort-Object -Property Name
     foreach ($dependency in $App.DependentApps) {
         Write-DependencyTree -App $dependency -Level ($Level + 1)

@@ -1,4 +1,4 @@
-function Import-D365BCNecessaryModule {
+function Global:Import-D365BCNecessaryModule {
     [CmdletBinding()]
     <#
     .SYNOPSIS
