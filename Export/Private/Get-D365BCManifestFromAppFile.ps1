@@ -229,4 +229,4 @@ function Global:Get-D365BCManifestFromAppFile {
         Get-NavxManifestFromAppFile -Filename $Filename -FullExtract:$FullExtract -SkipCleanup:$SkipCleanup -HideProgress:$HideProgress
     }
 }
-#Export-ModuleMember Get-D365BCManifestFromAppFile
+Export-ModuleMember Get-D365BCManifestFromAppFile
