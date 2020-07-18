@@ -4,9 +4,12 @@ function Global:Get-D365BCManifestFromAppFile {
     .SYNOPSIS
         Load Package-information from App-File
     .DESCRIPTION
-        Known Limitations: does not work with runtime-files
+        This CmdLet is an alternative to the standard CmdLet Get-NAVAppInfo -Path '.\MyAppFile.app'
+        You can use it on a machine, where the standard CmdLet is not available, due to missing DLLs etc.
 
         Reads a binary Extension (.app-File) and returns an [Xml]-object containing the Package-Information.
+
+        Known Limitations: does not yet work with runtime-files (created with Get-NavAppRuntimePackage)        
 
         Use like this:
         $xmlManifest = Get-D365BCManifestFromAppFile -Filename "\\Path\to\my\app.file"
@@ -31,11 +34,21 @@ function Global:Get-D365BCManifestFromAppFile {
         $xmlManifest.App.Runtime
         $xmlManifest.App.Target
         $xmlManifest.App.ShowMyCode
+    .PARAMETER Filename
+        [string] The .app-File you want to grab the information from (mandatory)
+    .PARAMETER FullExtract
+        [switch] Always extract complete archive, not only NavxManifest.xml
+    .PARAMETER SkipCleanup
+        [switch] Does not remove extracted files after cleanup
+    .PARAMETER HideProgress
+        [switch] When full extraction is done, normally there is a ProgressBar indicating the progress of Expand-Archive. Use this switch to hide this ProgressBar
     #>
     param(
         [parameter(Mandatory = $true)]
         [string]
         $Filename,
+        [switch]
+        $FullExtract,
         [switch]
         $SkipCleanup,
         [switch]
@@ -83,6 +96,8 @@ function Global:Get-D365BCManifestFromAppFile {
                 [string]
                 $Filename,
                 [switch]
+                $FullExtract,
+                [switch]
                 $SkipCleanup,
                 [switch]
                 $HideProgress
@@ -118,7 +133,7 @@ function Global:Get-D365BCManifestFromAppFile {
                     [switch]
                     $HideProgress
                 )
-                if ($HideProgress -eq $true){
+                if ($HideProgress -eq $true) {
                     $ProgressPreferenceBackup = $ProgressPreference
                     $global:ProgressPreference = 'SilentlyContinue'
                 }
@@ -127,28 +142,79 @@ function Global:Get-D365BCManifestFromAppFile {
                 try {                    
                     Write-Verbose "Extracting $(Split-Path $Filename -Leaf) to $($targetTempFolder)"
                     Expand-Archive -Path $Filename -DestinationPath $targetTempFolder -Force
-                } catch {
+                }
+                catch {
                     Write-Error "An error happened: $_"
-                } finally {
-                    if ($HideProgress -eq $true){
+                }
+                finally {
+                    if ($HideProgress -eq $true) {
                         $global:ProgressPreference = $ProgressPreferenceBackup
                     }
                 }
                 $targetFilename = Join-Path -Path $targetTempFolder -ChildPath "NavxManifest.xml"
-                if (-not(Test-Path $targetFilename)){
+                if (-not(Test-Path $targetFilename)) {
                     throw "$targetFilename not found in Archive."
                     return ""
                 }
                 $targetFilename
             }
+            function Get-NavxManifestFileFromArchive {
+                param(
+                    [parameter(Mandatory = $true)]
+                    [string]
+                    $Filename
+                )
+                begin {
+                    Add-Type -Assembly System.IO.Compression
+                }
+                process {
+                    $parentDirectory = Split-Path -Path $Filename
+                    $targetTempFolder = Join-Path -Path $parentDirectory -ChildPath "unzip"
+                    $targetFilename = Join-Path -Path $targetTempFolder -ChildPath "NavxManifest.xml"
+                    try {                    
+                        Write-Verbose "Extracting $(Split-Path $Filename -Leaf) to $($targetTempFolder)"
+                        New-Item -Path $targetTempFolder -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+                        
+                        # Read file as ZipArchive
+                        # Get ZipArchiveEntry for NavxManifest.xml
+                        # Save Stream from ZipArchiveEntry as newly created file
+                        $zipFileStream = [System.IO.FileStream]::new($Filename, [System.IO.FileMode]::Open)
+                        $zipFile = [System.IO.Compression.ZipArchive]::new($zipFileStream, [System.IO.Compression.ZipArchiveMode]::Read)
+                        $zipEntryManifest = $zipFile.GetEntry("NavxManifest.xml")
+                        $entryStream = $zipEntryManifest.Open()
+
+                        $fileStreamTargetManifest = [System.IO.File]::Create($targetFilename)
+                        $entryStream.CopyTo($fileStreamTargetManifest)
+                        $entryStream.Close()
+                        $zipFileStream.Close()
+                        $fileStreamTargetManifest.Close()                        
+                    }
+                    catch {
+                        Write-Error "An error happened: $_"
+                    } 
+                    if (-not(Test-Path $targetFilename)) {
+                        $targetFilename = ""
+                    }
+                    $targetFilename
+                }
+            }
             $Filename = Copy-FileToTemporaryLocation -Filename $Filename
             $Filename = Switch-AppFileToRegularZipFile -Filename $Filename
-            $ManifestFile = Expand-ArchiveAndReturnManifestName -Filename $Filename -HideProgress:$HideProgress
-            if ([string]::IsNullOrEmpty($ManifestFile)){
+            $ManifestFileName = ""
+            if ($FullExtract -ne $true) {
+                # For performance reasons, first try to read a single entry from the archive
+                # if this fails, extract the complete archive and look for the file
+                $ManifestFileName = Get-NavxManifestFileFromArchive -Filename $Filename
+            }
+            if ([string]::IsNullOrEmpty($ManifestFileName)) {
+                # Fallback (Extract complete Archive)
+                $ManifestFileName = Expand-ArchiveAndReturnManifestName -Filename $Filename -HideProgress:$HideProgress
+            }
+            if ([string]::IsNullOrEmpty($ManifestFileName)) {
                 return
             }
-            [Xml]$xmlManifest = Get-Content -Path $ManifestFile
-            if ($SkipCleanup -eq $false){
+            [Xml]$xmlManifest = Get-Content -Path $ManifestFileName
+            if ($SkipCleanup -eq $false) {
                 Write-Verbose "Cleaning up / removing temporary path $((Split-Path $Filename))"
                 Remove-Item (Split-Path $Filename) -Force -Recurse
             }
@@ -160,7 +226,7 @@ function Global:Get-D365BCManifestFromAppFile {
             throw "$Filename does not exist."
         }
         Write-Verbose "Getting information from $Filename"
-        Get-NavxManifestFromAppFile -Filename $Filename -SkipCleanup:$SkipCleanup -HideProgress:$HideProgress
+        Get-NavxManifestFromAppFile -Filename $Filename -FullExtract:$FullExtract -SkipCleanup:$SkipCleanup -HideProgress:$HideProgress
     }
 }
 Export-ModuleMember Get-D365BCManifestFromAppFile
