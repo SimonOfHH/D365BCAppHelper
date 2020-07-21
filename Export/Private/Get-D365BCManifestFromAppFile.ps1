@@ -9,8 +9,6 @@ function Global:Get-D365BCManifestFromAppFile {
 
         Reads a binary Extension (.app-File) and returns an [Xml]-object containing the Package-Information.
 
-        Known Limitations: does not yet work with runtime-files (created with Get-NavAppRuntimePackage)        
-
         Use like this:
         $xmlManifest = Get-D365BCManifestFromAppFile -Filename "\\Path\to\my\app.file"
 
@@ -108,22 +106,39 @@ function Global:Get-D365BCManifestFromAppFile {
                     [string]
                     $Filename
                 )
-                Write-Verbose "Creating ZIP-file from APP-file"
-                $onlyFilename = (Split-Path $Filename -Leaf).Replace(".app", "")
-                $parentDirectory = Split-Path -Path $Filename
-                $newFilename = Join-Path -Path $parentDirectory -ChildPath "$onlyFilename.zip"
-                # App-files are basically ZIP-files, but with an offest of 40 bytes
-                # So we first read the source file into a FileStream
-                # and then set the Offset of the Stream to 40
-                # After that we create a new file, copy the offsetted stream into it and save it
-                $stream = [System.IO.FileStream]::new($Filename, [System.IO.FileMode]::Open)
-                $stream.Seek(40, [System.IO.SeekOrigin]::Begin) | Out-Null
-                $fileStream = [System.IO.File]::Create($newFilename)
-                $stream.CopyTo($fileStream)
-                $fileStream.Close()
-                $stream.Close()
-                Write-Verbose "New ZIP-file is located at $newFilename"
-                return , $newFilename
+                begin {
+                    # Loads an additional Type, called "D365BCAppHelper.StreamHelper", which is used to decode RuntimePackages
+                    Add-D365BCDotNetHelperType
+                }
+                process {
+                    Write-Verbose "Creating ZIP-file from APP-file"
+                    $onlyFilename = (Split-Path $Filename -Leaf).Replace(".app", "")
+                    $parentDirectory = Split-Path -Path $Filename
+                    $newFilename = Join-Path -Path $parentDirectory -ChildPath "$onlyFilename.zip"
+                    $regularStream = $true;
+                    if ([D365BCAppHelper.StreamHelper]::IsRuntimePackage($Filename)) {
+                        $regularStream = $false
+                    }
+                    # App-files are basically ZIP-files, but with an offest of 40 bytes
+                    # So we first read the source file into a FileStream
+                    # and then set the Offset of the Stream to 40
+                    # After that we create a new file, copy the offsetted stream into it and save it                    
+                    $stream = [System.IO.FileStream]::new($Filename, [System.IO.FileMode]::Open)
+                    if ($regularStream -eq $true){
+                        $stream.Seek(40, [System.IO.SeekOrigin]::Begin) | Out-Null
+                    } else {
+                        $newStream = [D365BCAppHelper.StreamHelper]::DecodeStream($stream)
+                        $stream.Close()
+                        $stream = $newStream
+                        $stream.Seek(0, [System.IO.SeekOrigin]::Begin) | Out-Null
+                    }
+                    $fileStream = [System.IO.File]::Create($newFilename)
+                    $stream.CopyTo($fileStream)
+                    $fileStream.Close()
+                    $stream.Close()
+                    Write-Verbose "New ZIP-file is located at $newFilename"
+                    return , $newFilename
+                }
             }
             function Expand-ArchiveAndReturnManifestName {
                 param(
