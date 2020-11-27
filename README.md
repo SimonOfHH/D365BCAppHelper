@@ -12,6 +12,7 @@ Additionally there are a couple of helper CmdLets. The important ones are descri
 - [Get-D365BCAppNameFromFile](#get-d365BCAppNameFromFile)
 - [Get-D365BCVersionFromFile](#get-d365BCVersionFromFile)
 - [Get-D365BCPublisherFromFile](#get-d365BCPublisherFromFile)
+- [Get-D365BCDependenciesFromFile](#get-d365BCDependenciesFromFile)
 
 ## Get-AppDependencyInfo
 ### Description
@@ -273,3 +274,56 @@ Reads the "Publisher"-property from an .app-File (works with or without standard
 **Filename**: (string) The full path to the File (.app) that the information should be read from
 
 **FromManifest**: (switch) Set, if you don't want to use the standard CmdLet (`Get-NavAppInfo`)
+
+## Get-D365BCDependenciesFromFile
+### Short Description
+Reads the "Dependencies"-property from an .app-File (works with or without standard Business Central CmdLets available)
+
+### Parameters
+```
+-Filename
+[-FromManifest]
+```
+**Filename**: (string) The full path to the File (.app) that the information should be read from
+
+**FromManifest**: (switch) Set, if you don't want to use the standard CmdLet (`Get-NavAppInfo`)
+
+### Output
+Sample output (via `Get-NavAppInfo`)
+```
+PS C:\run> Get-D365BCDependenciesFromFile -Filename C:\run\my\test\PayPalPaymentsStandard.app
+
+AppId           : 437dbf0e-84ff-417a-965d-ed2bb9650972
+Name            : Base Application
+Publisher       : Microsoft
+MinVersion      : 15.2.0.0
+CompatibilityId : 0.0.0.0
+IsPropagated    : False
+Version         : 15.2.0.0
+
+AppId           : 63ca2fa4-4f03-4f2b-a480-172fef340d3f
+Name            : System Application
+Publisher       : Microsoft
+MinVersion      : 15.2.0.0
+CompatibilityId : 0.0.0.0
+IsPropagated    : False
+Version         : 15.2.0.0
+```
+
+Sample output (via Manifest)
+
+```
+PS C:\run> Get-D365BCDependenciesFromFile -Filename C:\run\my\test\PayPalPaymentsStandard.app -FromManifest
+
+Id              : 437dbf0e-84ff-417a-965d-ed2bb9650972
+Name            : Base Application
+Publisher       : Microsoft
+MinVersion      : 15.2.0.0
+CompatibilityId : 0.0.0.0
+
+Id              : 63ca2fa4-4f03-4f2b-a480-172fef340d3f
+Name            : System Application
+Publisher       : Microsoft
+MinVersion      : 15.2.0.0
+CompatibilityId : 0.0.0.0
+```
