@@ -13,10 +13,10 @@ function Install-D365BCApp {
         [parameter(Mandatory = $false)]
         [string]
         $AppPublisher,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [string]
         $AppName,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [string]
         $AppVersion,
         [parameter(Mandatory = $false)]
@@ -48,8 +48,26 @@ function Install-D365BCApp {
         if (-not($Tenant)) {
             $Tenant = Get-D365BCInstanceTenant
         }
+
+        if (-not($AppName)){
+            $AppName = Get-D365BCAppNameFromFile -Filename $AppFilename
+        }
+        if (-not($AppVersion)) {
+            $AppVersion = Get-D365BCVersionFromFile -Filename $AppFilename
+        }
+        if (-not($AppPublisher)) {
+            $AppPublisher = Get-D365BCPublisherFromFile -Filename $AppFilename
+        }
     }
     process {
+        if (-not($AppName)) {
+            throw "'AppName' needs to be set"
+            return
+        }
+        if (-not($AppVersion)) {
+            throw "'AppVersion' needs to be set"
+            return
+        }
         ### Publish-NAVApp ###
         $params = @{
             ServerInstance   = $ServerInstance 
@@ -67,7 +85,7 @@ function Install-D365BCApp {
         Write-Host "Processing Installation (Version $AppVersion)..."
         Write-Host "   Publishing...    " -NoNewline        
         Publish-NAVApp @params
-        Write-Host "Done" -ForegroundColor Green
+        Write-Host "Done" -ForegroundColor Green        
 
         ### Sync-NAVApp ###
         $params = @{

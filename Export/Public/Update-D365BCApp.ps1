@@ -13,7 +13,7 @@ function Update-D365BCApp {
         [parameter(Mandatory = $false)]
         [string]
         $AppPublisher,
-        [parameter(Mandatory = $true)]
+        [parameter(Mandatory = $false)]
         [string]
         $AppName,
         [parameter(Mandatory = $false)]
@@ -45,6 +45,9 @@ function Update-D365BCApp {
         if (-not($Tenant)) {
             $Tenant = Get-D365BCInstanceTenant
         }
+        if (-not($AppName)) {
+            $AppName = Get-D365BCAppNameFromFile -Filename $AppFilename
+        }
         if (-not($AppVersion)) {
             $AppVersion = Get-D365BCVersionFromFile -Filename $AppFilename
         }
@@ -60,6 +63,10 @@ function Update-D365BCApp {
         }
         if (-not($Tenant)) {
             throw "'Tenant' needs to be set"
+            return
+        }
+        if (-not($AppName)) {
+            throw "'AppName' needs to be set"
             return
         }
         if (-not($AppVersion)) {
