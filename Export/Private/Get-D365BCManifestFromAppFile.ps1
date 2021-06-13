@@ -229,7 +229,7 @@ function Global:Get-D365BCManifestFromAppFile {
             if ([string]::IsNullOrEmpty($ManifestFileName)) {
                 return
             }
-            [Xml]$xmlManifest = Get-Content -Path $ManifestFileName
+            [Xml]$xmlManifest = Get-Content -Path $ManifestFileName -Encoding UTF8
             if ($SkipCleanup -eq $false) {
                 Write-Verbose "Cleaning up / removing temporary path $((Split-Path $Filename))"
                 Remove-Item (Split-Path $Filename) -Force -Recurse
