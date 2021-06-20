@@ -125,9 +125,10 @@ function Global:Get-D365BCManifestFromAppFile {
                     # and then set the Offset of the Stream to 40
                     # After that we create a new file, copy the offsetted stream into it and save it                    
                     $stream = [System.IO.FileStream]::new($Filename, [System.IO.FileMode]::Open)
-                    if ($regularStream -eq $true){
+                    if ($regularStream -eq $true) {
                         $stream.Seek(40, [System.IO.SeekOrigin]::Begin) | Out-Null
-                    } else {
+                    }
+                    else {
                         $newStream = [D365BCAppHelper.StreamHelper]::DecodeStream($stream)
                         $stream.Close()
                         $stream = $newStream
@@ -187,6 +188,7 @@ function Global:Get-D365BCManifestFromAppFile {
                     $parentDirectory = Split-Path -Path $Filename
                     $targetTempFolder = Join-Path -Path $parentDirectory -ChildPath "unzip"
                     $targetFilename = Join-Path -Path $targetTempFolder -ChildPath "NavxManifest.xml"
+                    $targetFilename2 = Join-Path -Path $targetTempFolder -ChildPath "EmittedContent.json"
                     try {                    
                         Write-Verbose "Extracting $(Split-Path $Filename -Leaf) to $($targetTempFolder)"
                         New-Item -Path $targetTempFolder -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
@@ -203,7 +205,24 @@ function Global:Get-D365BCManifestFromAppFile {
                         $entryStream.CopyTo($fileStreamTargetManifest)
                         $entryStream.Close()
                         $zipFileStream.Close()
-                        $fileStreamTargetManifest.Close()                        
+                        $fileStreamTargetManifest.Close()
+
+                        ### Read "EmittedContent.json" if available
+                        $zipFileStream = [System.IO.FileStream]::new($Filename, [System.IO.FileMode]::Open)
+                        $zipFile = [System.IO.Compression.ZipArchive]::new($zipFileStream, [System.IO.Compression.ZipArchiveMode]::Read)
+                        $zipEntryManifest = $zipFile.GetEntry("bin/EmittedContent.json")
+                        if ($zipEntryManifest) {
+                            $entryStream = $zipEntryManifest.Open()
+
+                            $fileStreamTargetManifest = [System.IO.File]::Create($targetFilename2)
+                            $entryStream.CopyTo($fileStreamTargetManifest)
+                            $entryStream.Close()
+                            $zipFileStream.Close()
+                            $fileStreamTargetManifest.Close()
+                        }
+                        else {
+                            $zipFileStream.Close()
+                        }
                     }
                     catch {
                         Write-Error "An error happened: $_"
@@ -229,7 +248,18 @@ function Global:Get-D365BCManifestFromAppFile {
             if ([string]::IsNullOrEmpty($ManifestFileName)) {
                 return
             }
+            $parentPath = Split-Path -Path $ManifestFileName -Parent
+            $additionalContentPath = Join-Path $parentPath -ChildPath "EmittedContent.json"            
+
             [Xml]$xmlManifest = Get-Content -Path $ManifestFileName -Encoding UTF8
+            if (Test-Path -Path $additionalContentPath) {
+                $additionalContent = Get-Content -Raw -Path $additionalContentPath | ConvertFrom-Json
+                if ($additionalContent.PlatformVersion) {
+                    $child = $xmlManifest.CreateElement("PlatformVersion")
+                    $child.InnerText = $("$($additionalContent.PlatformVersion.Major).$($additionalContent.PlatformVersion.Minor).$($additionalContent.PlatformVersion.Build).$($additionalContent.PlatformVersion.Revision)")
+                    $xmlManifest.Package.App.AppendChild($child)
+                }
+            }
             if ($SkipCleanup -eq $false) {
                 Write-Verbose "Cleaning up / removing temporary path $((Split-Path $Filename))"
                 Remove-Item (Split-Path $Filename) -Force -Recurse
