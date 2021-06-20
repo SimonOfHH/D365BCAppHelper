@@ -13,6 +13,7 @@ Additionally there are a couple of helper CmdLets. The important ones are descri
 - [Get-D365BCVersionFromFile](#get-d365BCVersionFromFile)
 - [Get-D365BCPublisherFromFile](#get-d365BCPublisherFromFile)
 - [Get-D365BCDependenciesFromFile](#get-d365BCDependenciesFromFile)
+- [Get-D365BCPlatformVersion](#get-d365BCPlatformVersion) (Runtime-app only)
 
 ## Get-AppDependencyInfo
 ### Description
@@ -326,4 +327,22 @@ Name            : System Application
 Publisher       : Microsoft
 MinVersion      : 15.2.0.0
 CompatibilityId : 0.0.0.0
+```
+
+## Get-D365BCPlatformVersion
+### Short Description
+Returns the "PlatformVersion"-property from a given Runtime-AppPackage (.app-file)
+
+### Parameters
+```
+-Filename
+```
+**Filename**: (string) The full path to the File (.app) that the information should be read from
+
+### Output
+
+```
+PS C:\run> Get-D365BCPlatformVersion -Filename C:\run\my\test\MyRuntimeApp.runtime.app
+
+17.0.21485.22158
 ```
