@@ -13,6 +13,6 @@
 .history
 /Private
 TestRunner.ps1
+TestLicensing.ps1
+TestAppFile.ps1
 temp/
-
-# End of https://www.gitignore.io/api/visualstudiocode

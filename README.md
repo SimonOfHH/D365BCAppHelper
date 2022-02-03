@@ -7,6 +7,10 @@ Current list of commands:
 - [Update-D365BCApp](#update-d365BCApp)
 - [Install-D365BCApp](#install-d365BCApp)
 - [Uninstall-D365BCApp](#uninstall-d365BCApp)
+- [Get-D365BCLicenseInfo](#get-d365BCLicenseInfo)
+- [Get-D365BCObjectsFromPath](#get-d365BCObjectsFromPath)
+- [Get-D365BCObjectLicenseState](#get-d365BCObjectLicenseState)
+- [Get-D365BCUnlicensedObjects](#get-d365BCUnlicensedObjects)
 
 Additionally there are a couple of helper CmdLets. The important ones are described here:
 - [Get-D365BCAppNameFromFile](#get-d365BCAppNameFromFile)
@@ -236,6 +240,106 @@ Uninstalls an D365BC App
 **InstalledVersion**: Used when called from *Update-D365BCApp*
 
 **Force**: Uses *Force* on all used CmdLets
+
+## Get-D365BCLicenseInfo
+### Short Description
+Returns the custom-objects from a license summary file in an easy to process object-format
+### Parameters
+```
+-LicensInfoFile
+```
+**LicensInfoFile**: The text-file with the license summary
+
+### Output
+
+The output is an Array of 
+```
+[PSCustomObject]@{
+    Type      = <ObjectType>
+    Purchased = <NumberPurchased>
+    Assigned  = <NumberAssigned>
+    Remaining = <NumberRemaining>
+    Ranges    = <Array of [PSCustomObject]@{
+                            Quantity = <Quantity>
+                            Start    = <StartID>
+                            End      = <EndID>
+                        }>
+}  
+```
+
+Sample output
+```
+PS > Get-D365BCLicenseInfo -LicensInfoFile "<PathToSummaryTxtFile" | Format-Table
+
+Type      Purchased Assigned Remaining Ranges
+----      --------- -------- --------- ------
+TableData        80       70        10 {@{Quantity=58; Start=60000; End=60057}, @{Quantity=9; Start=60100; End=60108}, @{Quantity=3; Start=60113; End=60115}}
+Report          200       33       167 {@{Quantity=33; Start=60000; End=60032}}
+Codeunit        120       62        58 {@{Quantity=62; Start=60000; End=60061}}
+Page            200      108        92 {@{Quantity=87; Start=60000; End=60086}, @{Quantity=21; Start=60100; End=60120}}
+XMLPort         100        7        93 {@{Quantity=7; Start=60000; End=60006}}
+Query           100        0       100 {}
+```
+
+## Get-D365BCObjectsFromPath
+### Short Description
+Returns AL objects from a given directory in an easy to process object-format
+### Parameters
+```
+-Path
+[-CustomPattern]
+[-Recurse]
+```
+**Path**: Specifies a path to a directory containing AL files.
+**CustomPattern**: Overwrites the default pattern to identify objects
+**Recurse**: Gets the items in the specified locations and in all child items of the locations.
+
+### Output
+
+Sample output
+```
+PS > Get-D365BCObjectsFromPath -Path "<PathToRepository>" -Recurse
+
+Type              ID Name
+----              -- ----
+codeunit       60000 Sales Events
+codeunit       60001 Purchase Events
+codeunit       60002 Warehouse Events
+codeunit       60003 General Events
+....
+```
+
+## Get-D365BCObjectLicenseState
+### Short Description
+... TODO
+### Parameters
+```
+-...
+```
+**...**: TODO
+
+### Output
+
+Sample output
+```
+
+```
+
+## Get-D365BCUnlicensedObjects
+### Short Description
+... TODO
+### Parameters
+```
+-...
+```
+**...**: TODO
+
+### Output
+
+Sample output
+```
+
+```
 
 ## Get-D365BCAppNameFromFile
 ### Short Description
