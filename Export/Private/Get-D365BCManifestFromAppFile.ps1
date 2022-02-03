@@ -261,8 +261,16 @@ function Global:Get-D365BCManifestFromAppFile {
                 }
             }
             if ($SkipCleanup -eq $false) {
-                Write-Verbose "Cleaning up / removing temporary path $((Split-Path $Filename))"
-                Remove-Item (Split-Path $Filename) -Force -Recurse
+                # see https://github.com/SimonOfHH/D365BCAppHelper/issues/10
+                # It seems that there is a problem in some constellations that, if the directory name would end
+                # with a dot (.) the "Remove-Item" will throw an error. So, if the directory name would end with a
+                # dot remove it here
+                $cleanUpPath = Split-Path $Filename
+                if ($cleanUpPath.EndsWith(".")) {
+                    $cleanUpPath = $cleanUpPath.Substring(0, $cleanUpPath.Length - 1)
+                }
+                Write-Verbose "Cleaning up / removing temporary path $($cleanUpPath)"
+                Remove-Item $cleanUpPath -Force -Recurse
             }
             $xmlManifest.Package
         }
