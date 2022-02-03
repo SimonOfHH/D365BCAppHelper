@@ -296,6 +296,15 @@ Returns AL objects from a given directory in an easy to process object-format
 
 ### Output
 
+The output is an Array of 
+```
+[PSCustomObject]@{
+    Type       = <ObjectType>
+    ID         = <ObjectID>
+    Name       = <ObjectName>
+}  
+```
+
 Sample output
 ```
 PS > Get-D365BCObjectsFromPath -Path "<PathToRepository>" -Recurse
@@ -311,34 +320,78 @@ codeunit       60003 General Events
 
 ## Get-D365BCObjectLicenseState
 ### Short Description
-... TODO
+
+Returns AL objects from a given directory with the info, if they are licensed or not in an easy to process object-format
+
 ### Parameters
 ```
--...
+-LicensInfoFile
+-Path
+[-CustomPattern]
+[-Recurse]
 ```
-**...**: TODO
+**LicensInfoFile**: The text-file with the license summary
+**Path**: Specifies a path to a directory containing AL files.
+**CustomPattern**: Overwrites the default pattern to identify objects
+**Recurse**: Gets the items in the specified locations and in all child items of the locations.
 
 ### Output
 
-Sample output
+The output is an Array of 
+```
+[PSCustomObject]@{
+    Type       = <ObjectType>
+    ID         = <ObjectID>
+    Name       = <ObjectName>
+    Licensed   = <Boolean>
+    Unlicensed = <Boolean>
+}  
 ```
 
+Sample output
+```
+Type        ID Name                           Licensed Unlicensed
+----        -- ----                           -------- ----------
+codeunit 60062 Codeunit ABC                      False       True
+codeunit 60063 Codeunit CDE                      False       True
+codeunit 60064 Codeunit EFG                      False       True
 ```
 
 ## Get-D365BCUnlicensedObjects
 ### Short Description
-... TODO
+Returns AL objects from a given directory that are not licensed in an easy to process object-format
+
 ### Parameters
 ```
--...
+-LicensInfoFile
+-Path
+[-CustomPattern]
+[-Recurse]
 ```
-**...**: TODO
+**LicensInfoFile**: The text-file with the license summary
+**Path**: Specifies a path to a directory containing AL files.
+**CustomPattern**: Overwrites the default pattern to identify objects
+**Recurse**: Gets the items in the specified locations and in all child items of the locations.
 
 ### Output
 
-Sample output
+The output is an Array of 
+```
+[PSCustomObject]@{
+    Type       = <ObjectType>
+    ID         = <ObjectID>
+    Name       = <ObjectName>
+}  
 ```
 
+Sample output
+```
+Type              ID Name
+----              -- ----
+codeunit       60000 Sales Events
+codeunit       60001 Purchase Events
+codeunit       60002 Warehouse Events
+codeunit       60003 General Events
 ```
 
 ## Get-D365BCAppNameFromFile
