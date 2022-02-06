@@ -16,7 +16,7 @@ $path = "C:\temp\$moduleName"
 if (Test-Path -Path $path) {
     Remove-Item -Path $path -Force -Recurse
 }
-Copy-Item -Path $PSScriptRoot -Destination "C:\temp" -Exclude @("settings.ps1", ".gitignore", "README.md", "Publish$moduleName.ps1", "TestRunner.ps1", "TestLicensing.ps1", "TestAppFile.ps1") -Recurse
+Copy-Item -Path $PSScriptRoot -Destination "C:\temp" -Exclude @("settings.ps1", ".gitignore", "README.md", "Publish$moduleName.ps1", "TestRunner.ps1", "TestLicensing.ps1", "TestAppFile.ps1", "TestLicensingBcLic.ps1") -Recurse
 Remove-Item -Path (Join-Path $path ".git") -Force -Recurse -ErrorAction SilentlyContinue
 Remove-Item -Path (Join-Path $path "Tests") -Force -Recurse -ErrorAction SilentlyContinue
 Remove-Item -Path (Join-Path $path "Private") -Force -Recurse -ErrorAction SilentlyContinue
