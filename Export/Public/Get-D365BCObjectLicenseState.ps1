@@ -8,31 +8,38 @@ function Global:Get-D365BCObjectLicenseState {
     .PARAMETER LicensInfoFile
         [string] The License summary (txt) File you want to grab the information from (mandatory)
     .PARAMETER Path
-        [string] Specifies a path to a directory containing AL files.
+        [string] Specifies a path to a directory containing AL files (if getting objects from directory).
     .PARAMETER CustomPattern
-        [string] Overwrites the default pattern to identify objects
+        [string] Overwrites the default pattern to identify objects (if getting objects from directory).
     .PARAMETER Recurse
-        [switch] Gets the items in the specified locations and in all child items of the locations.
+        [switch] Gets the items in the specified locations and in all child items of the locations (if getting objects from directory).
+    .PARAMETER Objects
+        [string] Specifies an array of already loaded AL objects (via Get-D365BCObjectsFromPath).
     .OUTPUTS
         Array of [PSCustomObject]@{
                     Type      = <ObjectType>
                     ID        = <ObjectID>
                     Name      = <ObjectName>
+                    Licensed  = <Boolean>
+                    Unlicensed  = <Boolean>
                 }  
     #>
     param(        
         [parameter(Mandatory = $true)]
         [string]
         $LicensInfoFile,
-        [parameter(Mandatory = $true)]        
+        [parameter(Mandatory = $true, ParameterSetName = "Directory")]        
         [string]
         $Path,
-        [parameter(Mandatory = $false)]
+        [parameter(Mandatory = $false, ParameterSetName = "Directory")]
         [string]
         $CustomPattern,
-        [parameter(Mandatory = $false)]
+        [parameter(Mandatory = $false, ParameterSetName = "Directory")]
         [switch]
-        $Recurse
+        $Recurse,
+        [parameter(Mandatory = $true, ParameterSetName = "ObjectArray")]        
+        [PSCustomObject[]]
+        $Objects
     )
     function Test-D365BCObjectIsLicensed {
         param(        
@@ -58,20 +65,25 @@ function Global:Get-D365BCObjectLicenseState {
         }
         $false
     }    
-    # Handle Parameters
-    $params = @{
-        Path = $Path                        
-    }
-    if ($Recurse) {
-        $params.Add("Recurse", $Recurse)
-    }
-    if ($CustomPattern) {
-        $params.Add("CustomPattern", $CustomPattern)
-    }
     # Get license information from license file
     $licenseInfos = Get-D365BCLicenseInfo -LicensInfoFile $LicensInfoFile
-    # Get objcets from path
-    $objects = Get-D365BCObjectsFromPath @params
+    # Handle Parameters
+    if ($path) {
+        $params = @{
+            Path = $Path                        
+        }
+        if ($Recurse) {
+            $params.Add("Recurse", $Recurse)
+        }
+        if ($CustomPattern) {
+            $params.Add("CustomPattern", $CustomPattern)
+        }
+        # Get objcets from path
+        $objects = Get-D365BCObjectsFromPath @params
+    }
+    if ($Objects) {
+        $objects = $Objects
+    }
     # Check if there are unlicensed objects
     foreach ($object in $objects) {
         $licenseResult = Test-D365BCObjectIsLicensed -LicensInfos $licenseInfos -Object $object
