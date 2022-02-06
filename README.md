@@ -335,6 +335,13 @@ Returns AL objects from a given directory with the info, if they are licensed or
 **CustomPattern**: Overwrites the default pattern to identify objects
 **Recurse**: Gets the items in the specified locations and in all child items of the locations.
 
+```
+-LicensInfoFile
+-Objects
+```
+**LicensInfoFile**: The text-file with the license summary
+**Objects**: An array of objects from `Get-D365BCObjectsFromPath`
+
 ### Output
 
 The output is an Array of 

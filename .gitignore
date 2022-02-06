@@ -15,4 +15,5 @@
 TestRunner.ps1
 TestLicensing.ps1
 TestAppFile.ps1
+TestLicensingBcLic.ps1
 temp/
