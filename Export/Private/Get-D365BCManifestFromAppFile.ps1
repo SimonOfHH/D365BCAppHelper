@@ -77,10 +77,16 @@ function Global:Get-D365BCManifestFromAppFile {
             $onlyFilename = (Split-Path $Filename -Leaf).Replace(".app", "")
             $onlyFilename = Remove-InvalidFileNameChars $onlyFilename
             $targetTempFolder = Join-Path -Path $env:TEMP -ChildPath (New-Guid).Guid
-            $targetTempFolder = Join-Path -Path $targetTempFolder -ChildPath $onlyFilename            
+            # Don't append filename to directory-name, to avoid too long paths
+            #$targetTempFolder = Join-Path -Path $targetTempFolder -ChildPath $onlyFilename
             if (Test-Path $targetTempFolder) {
                 Write-Verbose "Removing temporary path $targetTempFolder"
                 Remove-Item $targetTempFolder -Force -Recurse
+            }
+            # Shorten filename if necessary, to stay below the limit of 260 chars on some systems
+            # Since $targetTempFolder shouldn't be very long (something like "C:\Users\<Username>\AppData\Local\Temp\<GUID>") this mostly applies to very long file names
+            while ((Join-Path -Path $targetTempFolder -ChildPath "$onlyFilename.app").Length -ge 260) {
+                $onlyFilename = $onlyFilename.Substring(0, $onlyFilename.Length - 1)
             }
             Write-Verbose "Creating temporary path $targetTempFolder"
             New-Item -Path $targetTempFolder -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
