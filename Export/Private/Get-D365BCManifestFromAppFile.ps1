@@ -262,7 +262,13 @@ function Global:Get-D365BCManifestFromAppFile {
                 $additionalContent = Get-Content -Raw -Path $additionalContentPath | ConvertFrom-Json
                 if ($additionalContent.PlatformVersion) {
                     $child = $xmlManifest.CreateElement("PlatformVersion")
-                    $child.InnerText = $("$($additionalContent.PlatformVersion.Major).$($additionalContent.PlatformVersion.Minor).$($additionalContent.PlatformVersion.Build).$($additionalContent.PlatformVersion.Revision)")
+                    if ($additionalContent.PlatformVersion.GetType().Name -eq "String") {
+                        $child.InnerText = $additionalContent.PlatformVersion
+                    }
+                    else {
+                        #PSCustomObject
+                        $child.InnerText = $("$($additionalContent.PlatformVersion.Major).$($additionalContent.PlatformVersion.Minor).$($additionalContent.PlatformVersion.Build).$($additionalContent.PlatformVersion.Revision)")
+                    }
                     $xmlManifest.Package.App.AppendChild($child)
                 }
             }
