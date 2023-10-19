@@ -1,4 +1,4 @@
-$VerbosePreference="SilentlyContinue"
+$VerbosePreference = "SilentlyContinue"
 # Version, Author, CompanyName and nugetkey
 . (Join-Path $PSScriptRoot ".\Private\settings.ps1")
 
@@ -16,7 +16,7 @@ $path = "C:\temp\$moduleName"
 if (Test-Path -Path $path) {
     Remove-Item -Path $path -Force -Recurse
 }
-Copy-Item -Path $PSScriptRoot -Destination "C:\temp" -Exclude @("settings.ps1", ".gitignore", "README.md", "Publish$moduleName.ps1", "TestRunner.ps1", "TestLicensing.ps1", "TestAppFile.ps1", "TestLicensingBcLic.ps1") -Recurse
+Copy-Item -Path $PSScriptRoot -Destination $path -Exclude @("settings.ps1", ".gitignore", "README.md", "Publish$moduleName.ps1", "TestRunner.ps1", "TestLicensing.ps1", "TestAppFile.ps1", "TestLicensingBcLic.ps1") -Recurse
 Remove-Item -Path (Join-Path $path ".git") -Force -Recurse -ErrorAction SilentlyContinue
 Remove-Item -Path (Join-Path $path "Tests") -Force -Recurse -ErrorAction SilentlyContinue
 Remove-Item -Path (Join-Path $path "Private") -Force -Recurse -ErrorAction SilentlyContinue
@@ -30,14 +30,14 @@ $functionsToExport = (get-module -Name $moduleName).ExportedFunctions.Keys | Sor
 $aliasesToExport = (get-module -Name $moduleName).ExportedAliases.Keys | Sort-Object
 
 Update-ModuleManifest -Path (Join-Path $path "$moduleName.psd1") `
-                      -RootModule "$moduleName.psm1" `
-                      -ModuleVersion $version `
-                      -Author $author `
-                      -CompanyName $CompanyName #`
-                      #-FunctionsToExport $functionsToExport #`
-                      #-AliasesToExport $aliasesToExport `
-                      #-FileList @("") `
-                      #-ReleaseNotes (get-content (Join-Path $path "ReleaseNotes.txt")) 
+    -RootModule "$moduleName.psm1" `
+    -ModuleVersion $version `
+    -Author $author `
+    -CompanyName $CompanyName #`
+#-FunctionsToExport $functionsToExport #`
+#-AliasesToExport $aliasesToExport `
+#-FileList @("") `
+#-ReleaseNotes (get-content (Join-Path $path "ReleaseNotes.txt")) 
 
 Copy-Item -Path (Join-Path $path "$moduleName.psd1") -Destination $PSScriptRoot -Force
 Publish-Module -Path $path -NuGetApiKey $powershellGalleryApiKey
