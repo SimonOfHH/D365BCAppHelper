@@ -194,10 +194,11 @@ function Global:Get-D365BCManifestFromAppFile {
                     $parentDirectory = Split-Path -Path $Filename
                     $targetTempFolder = Join-Path -Path $parentDirectory -ChildPath "unzip"
                     $targetFilename = Join-Path -Path $targetTempFolder -ChildPath "NavxManifest.xml"
-                    $targetFilename2 = Join-Path -Path $targetTempFolder -ChildPath "EmittedContent.json"
+                    $targetFilename2 = Join-Path -Path $targetTempFolder -ChildPath "bin/EmittedContent.json"
                     try {                    
                         Write-Verbose "Extracting $(Split-Path $Filename -Leaf) to $($targetTempFolder)"
                         New-Item -Path $targetTempFolder -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+                        New-Item -Path $([System.IO.Path]::GetDirectoryName($targetFilename2)) -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
                         
                         # Read file as ZipArchive
                         # Get ZipArchiveEntry for NavxManifest.xml
@@ -255,14 +256,20 @@ function Global:Get-D365BCManifestFromAppFile {
                 return
             }
             $parentPath = Split-Path -Path $ManifestFileName -Parent
-            $additionalContentPath = Join-Path $parentPath -ChildPath "EmittedContent.json"            
+            $additionalContentPath = Join-Path $parentPath -ChildPath "bin/EmittedContent.json"            
 
             [Xml]$xmlManifest = Get-Content -Path $ManifestFileName -Encoding UTF8
             if (Test-Path -Path $additionalContentPath) {
                 $additionalContent = Get-Content -Raw -Path $additionalContentPath | ConvertFrom-Json
                 if ($additionalContent.PlatformVersion) {
                     $child = $xmlManifest.CreateElement("PlatformVersion")
-                    $child.InnerText = $("$($additionalContent.PlatformVersion.Major).$($additionalContent.PlatformVersion.Minor).$($additionalContent.PlatformVersion.Build).$($additionalContent.PlatformVersion.Revision)")
+                    if ($additionalContent.PlatformVersion.GetType().Name -eq "String") {
+                        $child.InnerText = $additionalContent.PlatformVersion
+                    }
+                    else {
+                        #PSCustomObject
+                        $child.InnerText = $("$($additionalContent.PlatformVersion.Major).$($additionalContent.PlatformVersion.Minor).$($additionalContent.PlatformVersion.Build).$($additionalContent.PlatformVersion.Revision)")
+                    }
                     $xmlManifest.Package.App.AppendChild($child)
                 }
             }
