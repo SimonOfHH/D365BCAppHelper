@@ -76,7 +76,7 @@ function Global:Get-D365BCManifestFromAppFile {
             Write-Verbose "Copying file $Filename to temporary directory"
             $onlyFilename = (Split-Path $Filename -Leaf).Replace(".app", "")
             $onlyFilename = Remove-InvalidFileNameChars $onlyFilename
-            $targetTempFolder = Join-Path -Path $env:TEMP -ChildPath (New-Guid).Guid
+            $targetTempFolder = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath (New-Guid).Guid
             # Don't append filename to directory-name, to avoid too long paths
             #$targetTempFolder = Join-Path -Path $targetTempFolder -ChildPath $onlyFilename
             if (Test-Path $targetTempFolder) {
